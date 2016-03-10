@@ -168,18 +168,36 @@ class ESClusterMetrics < Sensu::Plugin::Metric::CLI::Graphite
     end
   end
 
+  def flatten_metrics(prefix, dest_metrics, src_metrics)
+    src_metrics.each do |k, v|
+      if v.is_a? Numeric and k != 'timestamp'
+        dest_metrics[prefix + '.' + k] = v
+      end
+
+      if v.is_a? Hash
+        flatten_metrics(prefix + '.' + k, dest_metrics, v)
+      end
+    end
+
+    return dest_metrics
+  end
+
   def run
+    timestamp = Time.now.to_i
+
     if config[:allow_non_master] || master?
       acquire_health.each do |k, v|
-        output(config[:scheme] + '.' + k, v)
+        output(config[:scheme] + '.' + k, v, timestamp)
       end
-      acquire_cluster_metrics.each do |cluster_metric|
-        cluster_metric[1].each do |k, v|
-          output(config[:scheme] + '.' + cluster_metric[0] + '.' + k, v)
-        end
-      end
-      output(config[:scheme] + '.document_count', acquire_document_count)
-      output(config[:scheme] + '.allocation_status', acquire_allocation_status) unless acquire_allocation_status.nil?
+
+      output(config[:scheme] + '.allocation_status', acquire_allocation_status, timestamp) unless acquire_allocation_status.nil?
+
+      metrics = {}
+      cluster_metrics = get_es_resource('/_cluster/stats')
+
+      flatten_metrics('indices', metrics, cluster_metrics['indices'])
+      flatten_metrics('nodes.count', metrics, cluster_metrics['nodes']['count'])
+      flatten_metrics('nodes.fs', metrics, cluster_metrics['nodes']['fs'])
     end
     ok
   end
