@@ -198,6 +198,10 @@ class ESClusterMetrics < Sensu::Plugin::Metric::CLI::Graphite
       flatten_metrics('indices', metrics, cluster_metrics['indices'])
       flatten_metrics('nodes.count', metrics, cluster_metrics['nodes']['count'])
       flatten_metrics('nodes.fs', metrics, cluster_metrics['nodes']['fs'])
+
+      metrics.each do |k, v|
+        output([config[:scheme], k].join('.'), v, timestamp)
+      end
     end
     ok
   end
