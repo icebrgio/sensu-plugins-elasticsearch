@@ -141,9 +141,6 @@ class ESMetrics < Sensu::Plugin::Metric::CLI::Graphite
     flatten_metrics('indices', metrics, node['indices'])
     flatten_metrics('breakers', metrics, node['breakers'])
 
-
-
-
     metrics.each do |k, v|
       output([config[:scheme], k].join('.'), v, timestamp)
     end

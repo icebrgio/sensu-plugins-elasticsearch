@@ -115,7 +115,7 @@ class ESClusterMetrics < Sensu::Plugin::Metric::CLI::Graphite
   end
 
   def acquire_health
-    health = get_es_resource('/_cluster/health').reject { |k, _v| %w(cluster_name timed_out).include?(k) }
+    health = get_es_resource('/_cluster/health').reject { |k, _v| %w(cluster_name timed_out number_of_nodes number_of_data_nodes active_shards active_primary_shards).include?(k) }
     health['status'] = %w(red yellow green).index(health['status'])
     health
   end
