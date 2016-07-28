@@ -115,31 +115,8 @@ class ESMetrics < Sensu::Plugin::Metric::CLI::Graphite
     node['jvm']['mem']['heap_max_in_bytes'] = ln['nodes'].values.first['jvm']['mem']['heap_max_in_bytes']
     metrics = {}
 
-    # OS metrics
-    metrics['os.load_average'] = if es_version >= Gem::Version.new('2.0.0')
-                                   node['os']['load_average']
-                                 else
-                                   node['os']['load_average'][0]
-                                 end
-
-    flatten_metrics('os.mem', metrics, node['os']['mem'])
-
-    # Process metrics
-    flatten_metrics('process', metrics, node['process'])
-
     # JVM metrics
     flatten_metrics('jvm', metrics, node['jvm'])
-
-    # Threadpool metrics
-    flatten_metrics('threadpool', metrics, node['jvm'])
-
-    # Filesystem.
-    flatten_metrics('fs', metrics, node['fs']['total'])
-
-    flatten_metrics('transport', metrics, node['transport'])
-    flatten_metrics('http', metrics, node['http'])
-    flatten_metrics('indices', metrics, node['indices'])
-    flatten_metrics('breakers', metrics, node['breakers'])
 
     metrics.each do |k, v|
       output([config[:scheme], k].join('.'), v, timestamp)
